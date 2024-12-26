@@ -3,5 +3,5 @@ pymongo[srv]==4.5.0
 IMDbPY==2022.7.9
 shazamio==0.7.0
 instaloader==4.10.1
-pinterest-video-downloader==1.0.0
 pytube==15.0.0
+youtube-dl
