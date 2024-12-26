@@ -2,6 +2,8 @@ from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from config import Config
 from pymongo import MongoClient
+from flask import Flask
+import threading
 
 # Initialisation MongoDB
 mongo_client = MongoClient(Config.MONGO_URI)
@@ -48,9 +50,7 @@ async def start_command(client, message):
     start_message = (
         f"Sᴀʟᴜᴛ🖐 {user_mention},\n"
         f"Mᴏɴ Nᴏᴍ ᴇsᴛ {bot_name}, Jᴇ ʂυιʂ υɳ 𝚋σƚ α‌ ɱυℓƚιρℓҽ ϝσɳƈƚισɳ, "
-        "𝙹𝙴 𝙿𝙴𝚄𝚇 ᴠᴏᴜs ғᴏᴜʀɴɪʀ ᴅᴇs ᴅᴏɴɴᴇᴇs ᴅᴇ ғɪʟᴍ, sᴇʀɪᴇs ᴇᴛ ᴀɴɪᴍᴇs. 😏\n\n"
-        "ᴊᴇ ᴘᴇᴜx ᴇɢᴀʟᴇᴍᴇɴᴛ ᴛᴇʟᴇᴄʜᴀʀɢᴇʀ ᴅᴇs ᴠɪᴅᴇᴏs ʏᴏᴜᴛᴜʙᴇ, ᴘɪɴᴛᴇʀᴇsᴛ, ᴇᴛ ɪɴsᴛᴀɢʀᴀᴍ ᴊᴜsᴛᴇ ᴇɴ ᴍᴇɴᴠᴏʏᴀɴᴛ ʟᴇ ʟɪᴇɴ. "
-        "ᴄʟɪᴄᴋ sᴜʀ /help ᴇᴛ ᴠᴏɪs ᴍᴇs ғᴏɴᴄᴛɪᴏɴɴᴀʟɪᴛᴇs."
+        "ᴊᴇ ᴘᴇᴜx ᴇɢᴀʟᴇᴍᴇɴᴛ ᴛᴇʟᴇᴄʜᴀʀɢᴇʀ ᴅᴇs ᴠɪᴅᴇᴏs ʏᴏᴜᴛᴜʙᴇ, ᴘɪɴᴛᴇʀᴇsᴛ, ᴇᴛ ɪɴsᴛᴀɢʀᴀᴍ."
     )
 
     # Boutons
@@ -103,30 +103,7 @@ async def about_callback(client, callback_query):
 # Gestion du bouton de retour au démarrage
 @bot.on_callback_query(filters.regex("back_to_start"))
 async def back_to_start(client, callback_query):
-    user_mention = callback_query.from_user.mention
-    bot_name = (await client.get_me()).first_name
-
-    # Texte du message
-    start_message = (
-        f"Sᴀʟᴜᴛ🖐 {user_mention},\n"
-        f"Mᴏɴ Nᴏᴍ ᴇsᴛ {bot_name}, Jᴇ ʂυιʂ υɳ 𝚋σƚ α‌ ɱυℓƚιρℓҽ ϝσɳƈƚισɳ, "
-        "𝙹𝙴 𝙿𝙴ᴜ𝚇 ᴠᴏᴜs ғᴏᴜʀɴɪʀ ᴅᴇs ᴅᴏɴɴᴇᴇs ᴅᴇ ғɪʟᴍ, sᴇʀɪᴇs ᴇᴛ ᴀɴɪᴍᴇs. 😏\n\n"
-        "ᴊᴇ ᴘᴇᴜx ᴇɢᴀʟᴇᴍᴇɴᴛ ᴛᴇʟᴇᴄʜᴀʀɢᴇʀ ᴅᴇs ᴠɪᴅᴇᴏs ʏᴏᴜᴛᴜʙᴇ, ᴘɪɴᴛᴇʀᴇsᴛ, ᴇᴛ ɪɴsᴛᴀɢʀᴀᴍ ᴊᴜsᴛᴇ ᴇɴ ᴍᴇɴᴠᴏʏᴀɴᴛ ʟᴇ ʟɪᴇɴ. "
-        "ᴄʟɪᴄᴋ sᴜʀ /help ᴇᴛ ᴠᴏɪs ᴍᴇs ғᴏɴᴄᴛɪᴏɴɴᴀʟɪᴛᴇs."
-    )
-
-    # Boutons
-    buttons = [
-        [
-            InlineKeyboardButton("⭐️À propos", callback_data="about"),
-            InlineKeyboardButton("αɳιɱҽ ƈɾσɯ", url=Config.ANIME_CROW_LINK),
-        ]
-    ]
-
-    await callback_query.message.edit_text(
-        text=start_message,
-        reply_markup=InlineKeyboardMarkup(buttons)
-    )
+    await start_command(client, callback_query.message)
 
 # Commande /help
 @bot.on_message(filters.command("help"))
@@ -134,6 +111,7 @@ async def help_command(client, message):
     help_text = (
         "💡 **Commandes disponibles :**\n"
         "/start - Démarrer le bot\n"
+        "/help - Voir l'aide\n"
         "/imdb [nom] - Rechercher un film ou série\n"
         "/song [titre] - Rechercher une chanson\n"
         "/yt [lien YouTube] - Télécharger une vidéo YouTube\n"
@@ -142,6 +120,20 @@ async def help_command(client, message):
     )
     await message.reply(help_text)
 
-# Lancer le bot
-if __name__ == "__main__":
+# Lancer le bot dans un thread
+def run_bot():
     bot.run()
+
+# Serveur Flask pour contrôle de santé
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "Bot is running!"
+
+def run_server():
+    app.run(host="0.0.0.0", port=8000)
+
+if __name__ == "__main__":
+    threading.Thread(target=run_bot).start()
+    run_server()
