@@ -1,20 +1,7 @@
-# Pyrogram pour interagir avec Telegram
 pyrogram==2.0.106
-
-# PyMongo pour MongoDB
 pymongo[srv]==4.5.0
-
-# IMDbPY pour les recherches IMDb
-IMDbPY==2023.5.2
-
-# Shazamio pour la recherche de chansons
+IMDbPY==2022.7.9
 shazamio==1.0.7
-
-# Instaloader pour le téléchargement Instagram
 instaloader==4.10.1
-
-# Pinterest downloader pour le téléchargement Pinterest
 pinterest-video-downloader==1.0.0
-
-# Pytube pour le téléchargement YouTube
 pytube==15.0.0
