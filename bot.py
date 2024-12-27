@@ -2,8 +2,11 @@ from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from config import Config
 from pymongo import MongoClient
-from flask import Flask
-import threading
+from flask import Flask, jsonify
+import asyncio
+
+# Import des gestionnaires supplémentaires
+from imdb_handlers import imdb_handler
 
 # Initialisation MongoDB
 mongo_client = MongoClient(Config.MONGO_URI)
@@ -67,39 +70,6 @@ async def start_command(client, message):
         reply_markup=InlineKeyboardMarkup(buttons)
     )
 
-# Gestion du bouton "À propos"
-@bot.on_callback_query(filters.regex("about"))
-async def about_callback(client, callback_query):
-    bot_mention = (await client.get_me()).mention
-
-    # Texte du message "À propos"
-    about_message = (
-        "╭───[🔅KGC🔅]────⍟\n"
-        "│\n"
-        f"├🔸🤖 Moɴ ɴoм: {bot_mention}\n"
-        "│\n"
-        "├🔸📝 Lαɴɢυαɢe: Ƥутнση3\n"
-        "│\n"
-        "├🔹📚 Bιвlιoтнe‌qυe: Pчrogrαm\n"
-        "│\n"
-        "├🔹📡 He‌вerɢe‌ ѕυr: ANTIFLIX\n"
-        "│\n"
-        "├🔸👨‍💻 De‌veloppeυr: 🇰ιηg¢єу\n"
-        "│\n"
-        "├🔸🔔 Mα Cнαι‌ɴe: AntiFlix Actu\n"
-        "│\n"
-        "╰─────────[ 😎 ]────────⍟"
-    )
-
-    # Bouton de retour
-    buttons = [[InlineKeyboardButton("⪻Backメ", callback_data="back_to_start")]]
-    
-    # Réponse au callback
-    await callback_query.message.edit_text(
-        text=about_message,
-        reply_markup=InlineKeyboardMarkup(buttons)
-    )
-
 # Commande /help
 @bot.on_message(filters.command("help"))
 async def help_command(client, message):
@@ -115,17 +85,38 @@ async def help_command(client, message):
     )
     await message.reply(help_text)
 
+# Gérer les messages privés envoyés directement au bot
+@bot.on_message(filters.private & ~filters.command)
+async def direct_message_handler(client, message):
+    await message.reply(
+        "❌ N'envoyez pas de message directement ici.\n"
+        "Envoyez vos demandes sur [@Antiflix_bot](https://t.me/Antiflix_bot).",
+        disable_web_page_preview=True
+    )
+
 # Serveur HTTP Flask pour Koyeb
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "Bot is running!", 200
+    return jsonify({"status": "Bot is running!"}), 200
 
-# Lancer le bot Telegram et le serveur Flask
-def run_bot():
-    bot.run()
+# Lancer Flask et Pyrogram avec asyncio
+async def run_flask():
+    loop = asyncio.get_event_loop()
+    from werkzeug.serving import make_server
+    server = make_server("0.0.0.0", 8000, app)
+    loop.run_in_executor(None, server.serve_forever)
+
+async def main():
+    # Enregistrer le gestionnaire IMDB
+    imdb_handler(bot)
+
+    # Démarrer Flask et Pyrogram
+    await asyncio.gather(
+        bot.start(),
+        run_flask()
+    )
 
 if __name__ == "__main__":
-    threading.Thread(target=run_bot).start()
-    app.run(host="0.0.0.0", port=8000)
+    asyncio.run(main())
