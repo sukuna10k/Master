@@ -100,11 +100,6 @@ async def about_callback(client, callback_query):
         reply_markup=InlineKeyboardMarkup(buttons)
     )
 
-# Gestion du bouton de retour au démarrage
-@bot.on_callback_query(filters.regex("back_to_start"))
-async def back_to_start(client, callback_query):
-    await start_command(client, callback_query.message)
-
 # Commande /help
 @bot.on_message(filters.command("help"))
 async def help_command(client, message):
@@ -120,20 +115,17 @@ async def help_command(client, message):
     )
     await message.reply(help_text)
 
-# Lancer le bot dans un thread
-def run_bot():
-    bot.run()
-
-# Serveur Flask pour contrôle de santé
+# Serveur HTTP Flask pour Koyeb
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "Bot is running!"
+    return "Bot is running!", 200
 
-def run_server():
-    app.run(host="0.0.0.0", port=8000)
+# Lancer le bot Telegram et le serveur Flask
+def run_bot():
+    bot.run()
 
 if __name__ == "__main__":
     threading.Thread(target=run_bot).start()
-    run_server()
+    app.run(host="0.0.0.0", port=8000)
